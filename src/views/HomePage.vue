@@ -9,9 +9,15 @@
     <div v-if="!showCamera && capturedImages.length > 0" class="main-preview">
       <h3>Captured Images</h3>
       <div class="main-preview-strip">
-        <div v-for="(image, index) in capturedImages" :key="index" class="main-preview-item">
+        <div
+          v-for="(image, index) in capturedImages"
+          :key="index"
+          class="main-preview-item"
+        >
           <img :src="image" alt="captured" />
-          <button @click="removeImage(index)" class="remove-btn">&times;</button>
+          <button @click="removeImage(index)" class="remove-btn">
+            &times;
+          </button>
         </div>
       </div>
     </div>
@@ -24,36 +30,128 @@
 
         <!-- Captured Images Preview -->
         <div class="preview-strip" v-if="capturedImages.length > 0">
-          <div v-for="(image, index) in capturedImages" :key="index" class="preview-item">
+          <div
+            v-for="(image, index) in capturedImages"
+            :key="index"
+            class="preview-item"
+          >
             <img :src="image" alt="captured" />
-            <button @click="removeImage(index)" class="remove-btn">&times;</button>
+            <button @click="removeImage(index)" class="remove-btn">
+              &times;
+            </button>
           </div>
         </div>
 
         <!-- Controls -->
         <div class="camera-controls">
           <button @click="openGallery" class="control-btn">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M5.41667 22.75H20.5833C21.78 22.75 22.75 21.78 22.75 20.5833V5.41667C22.75 4.22005 21.78 3.25 20.5833 3.25H5.41667C4.22005 3.25 3.25 4.22005 3.25 5.41667V20.5833C3.25 21.78 4.22005 22.75 5.41667 22.75ZM5.41667 22.75L17.3333 10.8333L22.75 16.25M10.8333 9.20833C10.8333 10.1058 10.1058 10.8333 9.20833 10.8333C8.31087 10.8333 7.58333 10.1058 7.58333 9.20833C7.58333 8.31087 8.31087 7.58333 9.20833 7.58333C10.1058 7.58333 10.8333 8.31087 10.8333 9.20833Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5.41667 22.75H20.5833C21.78 22.75 22.75 21.78 22.75 20.5833V5.41667C22.75 4.22005 21.78 3.25 20.5833 3.25H5.41667C4.22005 3.25 3.25 4.22005 3.25 5.41667V20.5833C3.25 21.78 4.22005 22.75 5.41667 22.75ZM5.41667 22.75L17.3333 10.8333L22.75 16.25M10.8333 9.20833C10.8333 10.1058 10.1058 10.8333 9.20833 10.8333C8.31087 10.8333 7.58333 10.1058 7.58333 9.20833C7.58333 8.31087 8.31087 7.58333 9.20833 7.58333C10.1058 7.58333 10.8333 8.31087 10.8333 9.20833Z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
 
           <button @click="capturePhoto" class="capture-btn">
             <div class="capture-inner"></div>
           </button>
 
+          <!-- Add this in the camera controls section -->
+          <button @click="cycleFlashMode" class="control-btn">
+            <svg
+              v-if="flashMode === 'off'"
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <line
+                x1="3"
+                y1="3"
+                x2="23"
+                y2="23"
+                stroke="white"
+                stroke-width="2"
+              />
+            </svg>
+            <svg
+              v-else-if="flashMode === 'on'"
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                fill="white"
+              />
+            </svg>
+            <svg
+              v-else
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <text x="18" y="8" fill="white" font-size="10">A</text>
+            </svg>
+          </button>
+
           <button @click="flipCamera" class="control-btn">
-            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M24.9163 4.33321V10.8332M24.9163 10.8332H18.4163M24.9163 10.8332L19.8897 6.10988C18.7254 4.94498 17.2849 4.09402 15.7028 3.63638C14.1207 3.17875 12.4484 3.12936 10.842 3.49282C9.23559 3.85629 7.74746 4.62076 6.51643 5.71491C5.2854 6.80906 4.35161 8.19723 3.80217 9.74988M1.08301 21.6665V15.1665M1.08301 15.1665H7.58301M1.08301 15.1665L6.10967 19.8899C7.27398 21.0548 8.71441 21.9057 10.2966 22.3634C11.8787 22.821 13.551 22.8704 15.1574 22.5069C16.7638 22.1435 18.2519 21.379 19.4829 20.2848C20.7139 19.1907 21.6477 17.8025 22.1972 16.2499" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 26 26"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M24.9163 4.33321V10.8332M24.9163 10.8332H18.4163M24.9163 10.8332L19.8897 6.10988C18.7254 4.94498 17.2849 4.09402 15.7028 3.63638C14.1207 3.17875 12.4484 3.12936 10.842 3.49282C9.23559 3.85629 7.74746 4.62076 6.51643 5.71491C5.2854 6.80906 4.35161 8.19723 3.80217 9.74988M1.08301 21.6665V15.1665M1.08301 15.1665H7.58301M1.08301 15.1665L6.10967 19.8899C7.27398 21.0548 8.71441 21.9057 10.2966 22.3634C11.8787 22.821 13.551 22.8704 15.1574 22.5069C16.7638 22.1435 18.2519 21.379 19.4829 20.2848C20.7139 19.1907 21.6477 17.8025 22.1972 16.2499"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
           </button>
         </div>
 
         <!-- Action Buttons -->
         <div class="action-buttons">
           <button @click="closeCamera" class="close-btn">Close</button>
-          <button 
-            @click="confirmImages" 
+          <button
+            @click="confirmImages"
             class="confirm-btn"
             :disabled="capturedImages.length === 0"
           >
@@ -64,16 +162,16 @@
     </div>
 
     <!-- Hidden Canvas -->
-    <canvas ref="canvas" style="display: none;"></canvas>
+    <canvas ref="canvas" style="display: none"></canvas>
   </div>
 </template>
 
 <script>
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted } from "vue";
 
 export default {
-  name: 'PWACamera',
-  emits: ['imagesSelected'],
+  name: "PWACamera",
+  emits: ["imagesSelected"],
 
   setup(props, { emit }) {
     const video = ref(null);
@@ -81,7 +179,12 @@ export default {
     const stream = ref(null);
     const showCamera = ref(false);
     const capturedImages = ref([]);
-    const facingMode = ref('environment');
+    const facingMode = ref("environment");
+    const flashEnabled = ref(false);
+    const flashSupported = ref(false);
+    const flashMode = ref("off"); // Possible values: 'off', 'on', 'auto'
+    const screenFlashOverlay = ref(null);
+    const isScreenFlash = ref(false);
 
     const openCamera = async () => {
       showCamera.value = true;
@@ -91,47 +194,269 @@ export default {
     const startCamera = async () => {
       try {
         if (stream.value) {
-          stream.value.getTracks().forEach(track => track.stop());
+          stream.value.getTracks().forEach((track) => track.stop());
         }
 
-        stream.value = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: facingMode.value },
-          audio: false
-        });
+        // Adjust constraints based on camera type
+        const constraints = {
+          video: {
+            facingMode: facingMode.value,
+            // Remove advanced torch settings for front camera
+            ...(facingMode.value === "environment"
+              ? {
+                  advanced: [{ torch: flashEnabled.value }],
+                }
+              : {}),
+          },
+          audio: false,
+        };
+
+        stream.value = await navigator.mediaDevices.getUserMedia(constraints);
 
         if (video.value) {
           video.value.srcObject = stream.value;
+          // Ensure video plays after source is set
+          await video.value.play();
         }
       } catch (error) {
-        console.error('Camera start failed:', error);
+        console.error("Camera start failed:", error);
       }
     };
 
+    const cycleFlashMode = async () => {
+      const modes = ["off", "on", "auto"];
+      const currentIndex = modes.indexOf(flashMode.value);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      flashMode.value = modes[nextIndex];
+
+      try {
+        const track = stream.value?.getVideoTracks()[0];
+        if (track) {
+          if (flashMode.value === "on") {
+            await track.applyConstraints({
+              advanced: [{ torch: true }],
+            });
+          } else {
+            await track.applyConstraints({
+              advanced: [{ torch: false }],
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Flash mode change failed:", error);
+      }
+    };
+
+    const toggleFlash = async () => {
+      if (!stream.value) return;
+
+      try {
+        const track = stream.value.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+
+        // Check if torch is supported
+        if (capabilities.torch) {
+          flashEnabled.value = !flashEnabled.value;
+
+          // Apply the torch constraint
+          await track.applyConstraints({
+            advanced: [{ torch: flashEnabled.value }],
+          });
+
+          console.log("Flash toggled:", flashEnabled.value);
+        } else {
+          console.log("Torch not supported on this device");
+          flashSupported.value = false;
+        }
+      } catch (error) {
+        console.error("Flash toggle failed:", error);
+        flashEnabled.value = false;
+        flashSupported.value = false;
+      }
+    };
+
+    // Improve light detection threshold and make it more sensitive
+    const detectLightLevel = async () => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const videoElem = video.value;
+
+        // Use central portion of video for light detection
+        const sampleSize = { width: 200, height: 200 };
+        const sourceX = (videoElem.videoWidth - sampleSize.width) / 2;
+        const sourceY = (videoElem.videoHeight - sampleSize.height) / 2;
+
+        canvas.width = sampleSize.width;
+        canvas.height = sampleSize.height;
+
+        ctx.drawImage(
+          videoElem,
+          sourceX,
+          sourceY,
+          sampleSize.width,
+          sampleSize.height,
+          0,
+          0,
+          sampleSize.width,
+          sampleSize.height
+        );
+
+        const imageData = ctx.getImageData(
+          0,
+          0,
+          sampleSize.width,
+          sampleSize.height
+        );
+        const data = imageData.data;
+
+        let totalBrightness = 0;
+
+        // Sample more pixels for accuracy
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          totalBrightness += 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+
+        const avgBrightness = totalBrightness / (data.length / 4);
+        console.log("Light level detected:", avgBrightness);
+        return avgBrightness;
+      } catch (error) {
+        console.error("Light detection failed:", error);
+        return 100;
+      }
+    };
+
+    // Improve auto flash detection
+    const isFlashNeeded = async () => {
+      if (flashMode.value === "on") return true;
+      if (flashMode.value === "off") return false;
+
+      // For auto mode
+      if (flashMode.value === "auto") {
+        const brightness = await detectLightLevel();
+        const isLowLight = brightness < 70; // More sensitive threshold
+        console.log("Auto flash needed:", isLowLight);
+        return isLowLight;
+      }
+
+      return false;
+    };
+
+    // Updated capturePhoto function with proper flash timing
     const capturePhoto = async () => {
       if (!video.value || !canvas.value) return;
 
+      try {
+        const isFrontCamera = facingMode.value === "user";
+        const track = stream.value?.getVideoTracks()[0];
+        const needsFlash = await isFlashNeeded();
+
+        if (needsFlash) {
+          if (isFrontCamera) {
+            // Front camera with screen flash
+            await handleScreenFlash();
+            // Capture during flash
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            await takePhoto();
+            // Turn off screen flash
+            if (screenFlashOverlay.value) {
+              screenFlashOverlay.value.style.opacity = "0";
+            }
+          } else {
+            // Rear camera with torch
+            if (track) {
+              // Turn on flash just before capture
+              await track.applyConstraints({ advanced: [{ torch: true }] });
+              // Wait for flash to reach full brightness
+              await new Promise((resolve) => setTimeout(resolve, 500));
+
+              // Take photo while flash is on
+              await takePhoto();
+
+              // Turn off flash immediately after
+              await track.applyConstraints({ advanced: [{ torch: false }] });
+            }
+          }
+        } else {
+          // No flash needed
+          await takePhoto();
+        }
+      } catch (error) {
+        console.error("Photo capture failed:", error);
+      }
+    };
+
+    // Separate the photo capture logic
+    const takePhoto = async () => {
       const videoElem = video.value;
       const canvasElem = canvas.value;
 
-      // Set canvas dimensions to match video
+      // Set canvas size
       canvasElem.width = videoElem.videoWidth;
       canvasElem.height = videoElem.videoHeight;
 
-      // Draw the video frame to canvas
-      const ctx = canvasElem.getContext('2d');
+      // Draw current frame
+      const ctx = canvasElem.getContext("2d");
       ctx.drawImage(videoElem, 0, 0);
 
-      // Convert to image and save
-      const imageData = canvasElem.toDataURL('image/jpeg', 0.8);
+      // Convert to image
+      const imageData = canvasElem.toDataURL("image/jpeg", 0.9);
       capturedImages.value.push(imageData);
+    };
+
+    // Improved screen flash handling
+    const handleScreenFlash = async () => {
+      return new Promise((resolve) => {
+        if (!screenFlashOverlay.value) {
+          createScreenFlashOverlay();
+        }
+
+        const overlay = screenFlashOverlay.value;
+        overlay.style.opacity = "0";
+
+        // Quick fade in
+        requestAnimationFrame(() => {
+          overlay.style.opacity = "0.9";
+          setTimeout(resolve, 200);
+        });
+      });
+    };
+
+    // Improve the screen flash overlay creation
+    const createScreenFlashOverlay = () => {
+      if (!screenFlashOverlay.value) {
+        const overlay = document.createElement("div");
+        overlay.style.position = "fixed";
+        overlay.style.top = "0";
+        overlay.style.left = "0";
+        overlay.style.width = "100%";
+        overlay.style.height = "100%";
+        overlay.style.backgroundColor = "#ffffff";
+        overlay.style.opacity = "0";
+        overlay.style.transition = "opacity 0.1s ease-in-out";
+        overlay.style.pointerEvents = "none";
+        overlay.style.zIndex = "9999";
+        document.body.appendChild(overlay);
+        screenFlashOverlay.value = overlay;
+      }
+    };
+
+    // Modify flipCamera to properly handle flash mode
+    const flipCamera = async () => {
+      facingMode.value =
+        facingMode.value === "environment" ? "user" : "environment";
+      await startCamera();
     };
 
     const openGallery = async () => {
       try {
-        const input = document.createElement('input');
-        input.type = 'file';
+        const input = document.createElement("input");
+        input.type = "file";
         input.multiple = true;
-        input.accept = 'image/*';
+        input.accept = "image/*";
 
         input.onchange = async (e) => {
           const files = Array.from(e.target.files || []);
@@ -149,13 +474,8 @@ export default {
 
         input.click();
       } catch (error) {
-        console.error('Gallery selection failed:', error);
+        console.error("Gallery selection failed:", error);
       }
-    };
-
-    const flipCamera = async () => {
-      facingMode.value = facingMode.value === 'environment' ? 'user' : 'environment';
-      await startCamera();
     };
 
     const removeImage = (index) => {
@@ -163,20 +483,23 @@ export default {
     };
 
     const confirmImages = () => {
-      emit('imagesSelected', capturedImages.value);
+      emit("imagesSelected", capturedImages.value);
       closeCamera();
     };
 
     const closeCamera = () => {
       if (stream.value) {
-        stream.value.getTracks().forEach(track => track.stop());
+        stream.value.getTracks().forEach((track) => track.stop());
       }
       showCamera.value = false; // Keep capturedImages intact
     };
 
     onUnmounted(() => {
       if (stream.value) {
-        stream.value.getTracks().forEach(track => track.stop());
+        stream.value.getTracks().forEach((track) => track.stop());
+      }
+      if (screenFlashOverlay.value) {
+        screenFlashOverlay.value.remove();
       }
     });
 
@@ -185,19 +508,32 @@ export default {
       canvas,
       showCamera,
       capturedImages,
+      flashEnabled,
+      flashSupported,
       openCamera,
+      toggleFlash,
+      flashMode,
+      cycleFlashMode,
+      screenFlashOverlay,
+      detectLightLevel,
+      isScreenFlash,
       capturePhoto,
       openGallery,
       flipCamera,
       removeImage,
       confirmImages,
-      closeCamera
+      closeCamera,
     };
-  }
+  },
 };
 </script>
 
 <style scoped>
+.camera-interface {
+  position: relative;
+  z-index: 1000;
+}
+
 .open-camera-btn {
   padding: 12px 24px;
   background: #007bff;
@@ -209,7 +545,10 @@ export default {
   position: absolute;
   top: 50%; /* Center vertically */
   left: 50%; /* Center horizontally */
-  transform: translate(-50%, -50%); /* Offset the position for perfect centering */
+  transform: translate(
+    -50%,
+    -50%
+  ); /* Offset the position for perfect centering */
   display: block;
   z-index: 999; /* Ensure it is above other content */
 }
@@ -314,7 +653,7 @@ export default {
   width: 50px;
   height: 50px;
   border-radius: 25px;
-  background: #7A7575; /* Increase opacity */
+  background: #7a7575; /* Increase opacity */
   border: none;
   color: #007bff; /* Change icon color */
   font-size: 20px;
@@ -324,6 +663,9 @@ export default {
   cursor: pointer;
 }
 
+.control-btn.active {
+  background: #007bff;
+}
 
 .capture-btn {
   width: 70px;
@@ -339,8 +681,8 @@ export default {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 3px solid #7A7575;
-  color: #7A7575;
+  border: 3px solid #7a7575;
+  color: #7a7575;
 }
 
 .action-buttons {
@@ -350,7 +692,8 @@ export default {
   background: rgba(0, 0, 0, 0.5);
 }
 
-.close-btn, .confirm-btn {
+.close-btn,
+.confirm-btn {
   padding: 12px 24px;
   border-radius: 8px;
   border: none;
