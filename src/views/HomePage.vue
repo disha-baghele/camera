@@ -1,18 +1,18 @@
 <template>
-  <div>
+  <div class="camera-container">
     <!-- Initial Button -->
     <button v-if="!showCamera" @click="openCamera" class="open-camera-btn">
       Open Camera
     </button>
 
-    <!-- Preview Section for Main Screen -->
+    <!-- Main Preview Section -->
     <div v-if="!showCamera && capturedImages.length > 0" class="main-preview">
       <h3>Captured Images</h3>
-      <div class="main-preview-strip">
+      <div class="preview-grid">
         <div
           v-for="(image, index) in capturedImages"
           :key="index"
-          class="main-preview-item"
+          class="preview-item"
         >
           <img :src="image" alt="captured" />
           <button @click="removeImage(index)" class="remove-btn">
@@ -22,33 +22,58 @@
       </div>
     </div>
 
-    <!-- PWA Camera Interface -->
+    <!-- Camera Interface -->
     <div v-if="showCamera" class="camera-interface">
       <!-- Camera View -->
       <div class="camera-view">
         <video ref="video" autoplay playsinline class="camera-preview"></video>
 
-        <!-- Captured Images Preview -->
-        <div class="preview-strip" v-if="capturedImages.length > 0">
-          <div
-            v-for="(image, index) in capturedImages"
-            :key="index"
-            class="preview-item"
+        <!-- Flash Button -->
+        <button @click="toggleFlash" class="flash-btn">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <img :src="image" alt="captured" />
-            <button @click="removeImage(index)" class="remove-btn">
-              &times;
-            </button>
-          </div>
-        </div>
+            <path
+              d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
+              :stroke="flashEnabled ? '#007bff' : 'white'"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              :fill="flashEnabled ? '#007bff' : 'none'"
+            />
+          </svg>
+        </button>
 
-        <!-- Controls -->
+        <!-- Horizontal Preview Strip -->
+<div v-if="capturedImages.length > 0" class="preview-strip-container">
+  <div class="preview-strip" ref="previewStrip">
+    <div
+      v-for="(image, index) in [...capturedImages].reverse()"
+      :key="index"
+      class="preview-strip-item"
+      :class="{ 'latest': index === 0 }"
+    >
+      <img :src="image" alt="captured" />
+      <!-- Strip remove button -->
+      <button @click="removeImage(index)" class="remove-btn">
+                &times;
+              </button>
+    </div>
+  </div>
+</div>
+
+
+        <!-- Camera Controls -->
         <div class="camera-controls">
           <button @click="openGallery" class="control-btn">
             <svg
-              width="26"
-              height="26"
-              viewBox="0 0 26 26"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -66,73 +91,11 @@
             <div class="capture-inner"></div>
           </button>
 
-          <!-- Add this in the camera controls section -->
-          <button @click="cycleFlashMode" class="control-btn">
-            <svg
-              v-if="flashMode === 'off'"
-              width="26"
-              height="26"
-              viewBox="0 0 26 26"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <line
-                x1="3"
-                y1="3"
-                x2="23"
-                y2="23"
-                stroke="white"
-                stroke-width="2"
-              />
-            </svg>
-            <svg
-              v-else-if="flashMode === 'on'"
-              width="26"
-              height="26"
-              viewBox="0 0 26 26"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                fill="white"
-              />
-            </svg>
-            <svg
-              v-else
-              width="26"
-              height="26"
-              viewBox="0 0 26 26"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M11.9163 1.08337L2.16634 13H10.833L8.66634 24.9167L18.4163 13H9.74967L11.9163 1.08337Z"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <text x="18" y="8" fill="white" font-size="10">A</text>
-            </svg>
-          </button>
-
           <button @click="flipCamera" class="control-btn">
             <svg
-              width="26"
-              height="26"
-              viewBox="0 0 26 26"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
@@ -147,7 +110,7 @@
           </button>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Bottom Action Buttons -->
         <div class="action-buttons">
           <button @click="closeCamera" class="close-btn">Close</button>
           <button
@@ -161,7 +124,7 @@
       </div>
     </div>
 
-    <!-- Hidden Canvas -->
+    <!-- Hidden Canvas for Image Processing -->
     <canvas ref="canvas" style="display: none"></canvas>
   </div>
 </template>
@@ -181,10 +144,7 @@ export default {
     const capturedImages = ref([]);
     const facingMode = ref("environment");
     const flashEnabled = ref(false);
-    const flashSupported = ref(false);
-    const flashMode = ref("off"); // Possible values: 'off', 'on', 'auto'
     const screenFlashOverlay = ref(null);
-    const isScreenFlash = ref(false);
 
     const openCamera = async () => {
       showCamera.value = true;
@@ -197,290 +157,153 @@ export default {
           stream.value.getTracks().forEach((track) => track.stop());
         }
 
-        // Adjust constraints based on camera type
         const constraints = {
           video: {
             facingMode: facingMode.value,
-            // Remove advanced torch settings for front camera
-            ...(facingMode.value === "environment"
-              ? {
-                  advanced: [{ torch: flashEnabled.value }],
-                }
-              : {}),
+            ...(facingMode.value === "environment" && {
+              advanced: [{ torch: flashEnabled.value }],
+            }),
           },
           audio: false,
         };
 
         stream.value = await navigator.mediaDevices.getUserMedia(constraints);
-
+        
         if (video.value) {
           video.value.srcObject = stream.value;
-          // Ensure video plays after source is set
           await video.value.play();
         }
       } catch (error) {
-        console.error("Camera start failed:", error);
-      }
-    };
-
-    const cycleFlashMode = async () => {
-      const modes = ["off", "on", "auto"];
-      const currentIndex = modes.indexOf(flashMode.value);
-      const nextIndex = (currentIndex + 1) % modes.length;
-      flashMode.value = modes[nextIndex];
-
-      try {
-        const track = stream.value?.getVideoTracks()[0];
-        if (track) {
-          if (flashMode.value === "on") {
-            await track.applyConstraints({
-              advanced: [{ torch: true }],
-            });
-          } else {
-            await track.applyConstraints({
-              advanced: [{ torch: false }],
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Flash mode change failed:", error);
+        console.error("Failed to start camera:", error);
       }
     };
 
     const toggleFlash = async () => {
       if (!stream.value) return;
-
+      
       try {
         const track = stream.value.getVideoTracks()[0];
-        const capabilities = track.getCapabilities();
-
-        // Check if torch is supported
-        if (capabilities.torch) {
+        
+        if (facingMode.value === 'environment' && track.getCapabilities()?.torch) {
           flashEnabled.value = !flashEnabled.value;
-
-          // Apply the torch constraint
           await track.applyConstraints({
             advanced: [{ torch: flashEnabled.value }],
           });
-
-          console.log("Flash toggled:", flashEnabled.value);
         } else {
-          console.log("Torch not supported on this device");
-          flashSupported.value = false;
+          // For front camera, just toggle the state
+          flashEnabled.value = !flashEnabled.value;
         }
       } catch (error) {
         console.error("Flash toggle failed:", error);
         flashEnabled.value = false;
-        flashSupported.value = false;
       }
     };
 
-    // Improve light detection threshold and make it more sensitive
-    const detectLightLevel = async () => {
-      try {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const videoElem = video.value;
-
-        // Use central portion of video for light detection
-        const sampleSize = { width: 200, height: 200 };
-        const sourceX = (videoElem.videoWidth - sampleSize.width) / 2;
-        const sourceY = (videoElem.videoHeight - sampleSize.height) / 2;
-
-        canvas.width = sampleSize.width;
-        canvas.height = sampleSize.height;
-
-        ctx.drawImage(
-          videoElem,
-          sourceX,
-          sourceY,
-          sampleSize.width,
-          sampleSize.height,
-          0,
-          0,
-          sampleSize.width,
-          sampleSize.height
-        );
-
-        const imageData = ctx.getImageData(
-          0,
-          0,
-          sampleSize.width,
-          sampleSize.height
-        );
-        const data = imageData.data;
-
-        let totalBrightness = 0;
-
-        // Sample more pixels for accuracy
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          totalBrightness += 0.299 * r + 0.587 * g + 0.114 * b;
-        }
-
-        const avgBrightness = totalBrightness / (data.length / 4);
-        console.log("Light level detected:", avgBrightness);
-        return avgBrightness;
-      } catch (error) {
-        console.error("Light detection failed:", error);
-        return 100;
-      }
+    const handleRearFlash = async () => {
+      const track = stream.value?.getVideoTracks()[0];
+      await track.applyConstraints({
+        advanced: [{ torch: true }],
+      });
+      await new Promise(r => setTimeout(r, 300));
+      await takePhoto();
+      await track.applyConstraints({
+        advanced: [{ torch: false }],
+      });
     };
 
-    // Improve auto flash detection
-    const isFlashNeeded = async () => {
-      if (flashMode.value === "on") return true;
-      if (flashMode.value === "off") return false;
-
-      // For auto mode
-      if (flashMode.value === "auto") {
-        const brightness = await detectLightLevel();
-        const isLowLight = brightness < 70; // More sensitive threshold
-        console.log("Auto flash needed:", isLowLight);
-        return isLowLight;
+    const handleFrontFlash = async () => {
+      if (!screenFlashOverlay.value) {
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = '#ffffff';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.1s ease-in';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '9999';
+        document.body.appendChild(overlay);
+        screenFlashOverlay.value = overlay;
       }
 
-      return false;
+      const overlay = screenFlashOverlay.value;
+      overlay.style.opacity = '0.9';
+      await new Promise(r => setTimeout(r, 100));
+      await takePhoto();
+      overlay.style.opacity = '0';
     };
 
-    // Updated capturePhoto function with proper flash timing
     const capturePhoto = async () => {
       if (!video.value || !canvas.value) return;
 
       try {
-        const isFrontCamera = facingMode.value === "user";
-        const track = stream.value?.getVideoTracks()[0];
-        const needsFlash = await isFlashNeeded();
-
-        if (needsFlash) {
-          if (isFrontCamera) {
-            // Front camera with screen flash
-            await handleScreenFlash();
-            // Capture during flash
-            await new Promise((resolve) => setTimeout(resolve, 300));
-            await takePhoto();
-            // Turn off screen flash
-            if (screenFlashOverlay.value) {
-              screenFlashOverlay.value.style.opacity = "0";
-            }
+        if (flashEnabled.value) {
+          if (facingMode.value === 'environment') {
+            await handleRearFlash();
           } else {
-            // Rear camera with torch
-            if (track) {
-              // Turn on flash just before capture
-              await track.applyConstraints({ advanced: [{ torch: true }] });
-              // Wait for flash to reach full brightness
-              await new Promise((resolve) => setTimeout(resolve, 500));
-
-              // Take photo while flash is on
-              await takePhoto();
-
-              // Turn off flash immediately after
-              await track.applyConstraints({ advanced: [{ torch: false }] });
-            }
+            await handleFrontFlash();
           }
         } else {
-          // No flash needed
           await takePhoto();
         }
       } catch (error) {
-        console.error("Photo capture failed:", error);
+        console.error('Photo capture failed:', error);
+        await takePhoto();
       }
     };
 
-    // Separate the photo capture logic
     const takePhoto = async () => {
       const videoElem = video.value;
       const canvasElem = canvas.value;
 
-      // Set canvas size
       canvasElem.width = videoElem.videoWidth;
       canvasElem.height = videoElem.videoHeight;
 
-      // Draw current frame
       const ctx = canvasElem.getContext("2d");
       ctx.drawImage(videoElem, 0, 0);
 
-      // Convert to image
       const imageData = canvasElem.toDataURL("image/jpeg", 0.9);
       capturedImages.value.push(imageData);
     };
 
-    // Improved screen flash handling
-    const handleScreenFlash = async () => {
-      return new Promise((resolve) => {
-        if (!screenFlashOverlay.value) {
-          createScreenFlashOverlay();
-        }
-
-        const overlay = screenFlashOverlay.value;
-        overlay.style.opacity = "0";
-
-        // Quick fade in
-        requestAnimationFrame(() => {
-          overlay.style.opacity = "0.9";
-          setTimeout(resolve, 200);
-        });
-      });
-    };
-
-    // Improve the screen flash overlay creation
-    const createScreenFlashOverlay = () => {
-      if (!screenFlashOverlay.value) {
-        const overlay = document.createElement("div");
-        overlay.style.position = "fixed";
-        overlay.style.top = "0";
-        overlay.style.left = "0";
-        overlay.style.width = "100%";
-        overlay.style.height = "100%";
-        overlay.style.backgroundColor = "#ffffff";
-        overlay.style.opacity = "0";
-        overlay.style.transition = "opacity 0.1s ease-in-out";
-        overlay.style.pointerEvents = "none";
-        overlay.style.zIndex = "9999";
-        document.body.appendChild(overlay);
-        screenFlashOverlay.value = overlay;
-      }
-    };
-
-    // Modify flipCamera to properly handle flash mode
     const flipCamera = async () => {
-      facingMode.value =
-        facingMode.value === "environment" ? "user" : "environment";
+      facingMode.value = facingMode.value === "environment" ? "user" : "environment";
+      flashEnabled.value = false; // Reset flash when switching camera
       await startCamera();
     };
 
-    const openGallery = async () => {
-      try {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.multiple = true;
-        input.accept = "image/*";
+    const openGallery = () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.accept = "image/*";
 
-        input.onchange = async (e) => {
-          const files = Array.from(e.target.files || []);
+      input.onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            capturedImages.value.push(event.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+      };
 
-          for (const file of files) {
-            const reader = new FileReader();
-
-            reader.onload = (event) => {
-              capturedImages.value.push(event.target.result);
-            };
-
-            reader.readAsDataURL(file);
-          }
-        };
-
-        input.click();
-      } catch (error) {
-        console.error("Gallery selection failed:", error);
-      }
+      input.click();
     };
 
-    const removeImage = (index) => {
-      capturedImages.value.splice(index, 1);
-    };
+    const removeImage = (index, fromPreviewStrip = false) => {
+  if (fromPreviewStrip) {
+    // Calculate the correct index in the original array based on the reversed order
+    const originalIndex = capturedImages.value.length - 1 - index;
+    capturedImages.value.splice(originalIndex, 1); // Remove the image from the original array
+  } else {
+    capturedImages.value.splice(index, 1); // Remove image from the main preview
+  }
+};
+
 
     const confirmImages = () => {
       emit("imagesSelected", capturedImages.value);
@@ -491,7 +314,7 @@ export default {
       if (stream.value) {
         stream.value.getTracks().forEach((track) => track.stop());
       }
-      showCamera.value = false; // Keep capturedImages intact
+      showCamera.value = false;
     };
 
     onUnmounted(() => {
@@ -509,14 +332,8 @@ export default {
       showCamera,
       capturedImages,
       flashEnabled,
-      flashSupported,
       openCamera,
       toggleFlash,
-      flashMode,
-      cycleFlashMode,
-      screenFlashOverlay,
-      detectLightLevel,
-      isScreenFlash,
       capturePhoto,
       openGallery,
       flipCamera,
@@ -529,9 +346,10 @@ export default {
 </script>
 
 <style scoped>
-.camera-interface {
+.camera-container {
+  width: 100%;
+  height: 100%;
   position: relative;
-  z-index: 1000;
 }
 
 .open-camera-btn {
@@ -542,46 +360,7 @@ export default {
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
-  position: absolute;
-  top: 50%; /* Center vertically */
-  left: 50%; /* Center horizontally */
-  transform: translate(
-    -50%,
-    -50%
-  ); /* Offset the position for perfect centering */
-  display: block;
-  z-index: 999; /* Ensure it is above other content */
-}
-
-.main-preview {
-  padding: 20px;
-}
-
-.main-preview h3 {
-  margin-bottom: 10px;
-  font-size: 18px;
-}
-
-.main-preview-strip {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap; /* Allow images to wrap when there's more */
-  justify-content: flex-start; /* Align images to the start of the container */
-  overflow-y: auto; /* Allow vertical scrolling */
-}
-
-.main-preview-item {
-  position: relative;
-  height: 100px;
-  width: 100px;
-  margin-bottom: 10px;
-}
-
-.main-preview-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 8px;
+  margin: 20px;
 }
 
 .camera-interface {
@@ -596,46 +375,50 @@ export default {
 
 .camera-view {
   height: 100%;
+  width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
 }
 
 .camera-preview {
-  flex: 1;
   width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-.preview-strip {
+.flash-btn {
   position: absolute;
   top: 20px;
-  left: 0;
-  right: 0;
-  height: 100px;
-  display: flex;
-  padding: 10px;
-  overflow-x: auto; /* Enables horizontal scrolling */
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
   background: rgba(0, 0, 0, 0.5);
-  gap: 10px;
-  scrollbar-width: none; /* Hides scrollbar in Firefox */
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
 }
 
-.preview-strip::-webkit-scrollbar {
-  display: none; /* Hides scrollbar in WebKit browsers (Chrome, Safari, etc.) */
-}
-
-.preview-item {
-  flex: 0 0 auto; /* Prevents shrinking of items and ensures fixed size */
-  height: 80px;
-  width: 80px;
-  position: relative;
-}
-
-.preview-item img {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
+.latest-preview {
+  position: absolute;
+  bottom: 180px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
   border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid white;
+  z-index: 1001;
+}
+
+.latest-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .camera-controls {
@@ -650,21 +433,15 @@ export default {
 }
 
 .control-btn {
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-  background: #7a7575; /* Increase opacity */
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.5);
   border: none;
-  color: #007bff; /* Change icon color */
-  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-}
-
-.control-btn.active {
-  background: #007bff;
 }
 
 .capture-btn {
@@ -681,8 +458,7 @@ export default {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 3px solid #7a7575;
-  color: #7a7575;
+  border: 3px solid #666;
 }
 
 .action-buttons {
@@ -718,19 +494,130 @@ export default {
 
 .remove-btn {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
+  top: 5px; /* Adjust as necessary for visibility */
+  right: 5px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  background: red;
+  background: rgba(255, 0, 0, 0.8);
   color: white;
   border: none;
+  font-size: 18px;
   cursor: pointer;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  z-index: 10;
+}
+
+.camera-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.open-camera-btn {
+  margin: 20px auto;
+  display: block;
+}
+
+.main-preview {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+  padding: 16px;
+
+  max-height: 90%; /* Adjust based on the space available above/below */
+  overflow-y: auto; /* Enable vertical scrolling */
+  box-sizing: border-box; /* Ensure padding is included in height calculation */
+  flex-wrap: wrap;
+}
+
+.preview-grid, .preview-strip {
+  display: flex;
+  gap: 10px;
+  padding: 0 10px;
+  overflow-x: auto;
+}
+
+
+
+.preview-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-strip-container {
+  position: absolute;
+  bottom: 180px;
+  left: 0;
+  width: 100%;
+  padding: 10px;
+  overflow-x: auto;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.preview-strip {
+  display: flex;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.preview-strip-item {
+  position: relative;
+  flex: 0 0 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.preview-strip-item.latest {
+  border-color: #007bff;
+}
+
+.preview-strip-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-strip-item .remove-btn {
+  top: -5px;
+  right: -5px;
+  background: rgba(255, 0, 0, 0.8); /* Same as main preview */
+  font-size: 16px; /* Adjust size */
+}
+
+/* Ensure smooth scrolling */
+.preview-strip-container {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.preview-strip-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Adjust camera controls position */
+.camera-controls {
+  bottom: 80px;
 }
 </style>
