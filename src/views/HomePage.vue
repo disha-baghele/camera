@@ -26,7 +26,10 @@
     <div v-if="showCamera" class="camera-interface">
       <!-- Camera View -->
       <div class="camera-view">
-        <video ref="video" autoplay playsinline class="camera-preview"></video>
+        <video ref="video" autoplay playsinline :style="{
+            transform: facingMode === 'user' ? 'scaleX(-1)' : 'none',
+            '-webkit-transform': facingMode === 'user' ? 'scaleX(-1)' : 'none'
+          }" class="camera-preview"></video>
 
         <!-- Flash Button -->
         <button @click="toggleFlash" class="flash-btn">
@@ -162,6 +165,8 @@ export default {
         const constraints = {
           video: {
             facingMode: facingMode.value,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
             ...(facingMode.value === "environment" && {
               advanced: [{ torch: flashEnabled.value }],
             }),
@@ -177,6 +182,11 @@ export default {
         }
       } catch (error) {
         console.error("Failed to start camera:", error);
+        // Fallback to environment camera if front camera fails
+        if (facingMode.value === "user") {
+          facingMode.value = "environment";
+          await startCamera();
+        }
       }
     };
 
@@ -264,7 +274,18 @@ export default {
       canvasElem.height = videoElem.videoHeight;
 
       const ctx = canvasElem.getContext("2d");
+
+      // Apply mirror effect when using front camera
+  if (facingMode.value === 'user') {
+    ctx.translate(canvasElem.width, 0);
+    ctx.scale(-1, 1);
+  }
       ctx.drawImage(videoElem, 0, 0);
+
+      // Reset transformation
+  if (facingMode.value === 'user') {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
 
       const imageData = canvasElem.toDataURL("image/jpeg", 0.9);
       capturedImages.value.push(imageData);
@@ -297,10 +318,8 @@ export default {
     };
 
     const removeImage = (index, fromPreviewStrip = false) => {
-  
-    capturedImages.value.splice(index, 1); // Remove image from the main preview
-  
-};
+      capturedImages.value.splice(index, 1); // Remove image from the main preview
+    };
 
 // Add new remove function for preview strip
 const removeImageFromStrip = (reverseIndex) => {
@@ -351,6 +370,10 @@ const removeImageFromStrip = (reverseIndex) => {
 </script>
 
 <style scoped>
+.mirror-mode {
+  transform: scaleX(-1);
+}
+
 .camera-container {
   width: 100%;
   height: 100%;
@@ -390,6 +413,7 @@ const removeImageFromStrip = (reverseIndex) => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 .flash-btn {
