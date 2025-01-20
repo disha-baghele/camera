@@ -49,22 +49,24 @@
         </button>
 
         <!-- Horizontal Preview Strip -->
-<div v-if="capturedImages.length > 0" class="preview-strip-container">
-  <div class="preview-strip" ref="previewStrip">
-    <div
-      v-for="(image, index) in [...capturedImages].reverse()"
-      :key="index"
-      class="preview-strip-item"
-      :class="{ 'latest': index === 0 }"
-    >
-      <img :src="image" alt="captured" />
-      <!-- Strip remove button -->
-      <button @click="removeImage(index)" class="remove-btn">
+        <div v-if="capturedImages.length > 0" class="preview-strip-container">
+          <div class="preview-strip" ref="previewStrip">
+            <div
+              v-for="(image, index) in [...capturedImages].reverse()"
+              :key="index"
+              class="preview-strip-item"
+              :class="{ 'latest': index === 0 }"
+            >
+              <img :src="image" alt="captured" />
+              <button 
+                @click="removeImageFromStrip(index)" 
+                class="strip-remove-btn"
+              >
                 &times;
               </button>
-    </div>
-  </div>
-</div>
+            </div>
+          </div>
+        </div>
 
 
         <!-- Camera Controls -->
@@ -295,14 +297,16 @@ export default {
     };
 
     const removeImage = (index, fromPreviewStrip = false) => {
-  if (fromPreviewStrip) {
-    // Calculate the correct index in the original array based on the reversed order
-    const originalIndex = capturedImages.value.length - 1 - index;
-    capturedImages.value.splice(originalIndex, 1); // Remove the image from the original array
-  } else {
+  
     capturedImages.value.splice(index, 1); // Remove image from the main preview
-  }
+  
 };
+
+// Add new remove function for preview strip
+const removeImageFromStrip = (reverseIndex) => {
+      const actualIndex = capturedImages.value.length - 1 - reverseIndex;
+      capturedImages.value.splice(actualIndex, 1);
+    };
 
 
     const confirmImages = () => {
@@ -338,6 +342,7 @@ export default {
       openGallery,
       flipCamera,
       removeImage,
+      removeImageFromStrip,
       confirmImages,
       closeCamera,
     };
@@ -510,6 +515,31 @@ export default {
   z-index: 10;
 }
 
+.strip-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 0, 0, 0.9);
+  color: white;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.strip-remove-btn:hover {
+  background: rgba(255, 0, 0, 1);
+  transform: scale(1.1);
+}
+
 .camera-container {
   width: 100%;
   min-height: 100vh;
@@ -534,7 +564,6 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 16px;
   padding: 16px;
-
   max-height: 90%; /* Adjust based on the space available above/below */
   overflow-y: auto; /* Enable vertical scrolling */
   box-sizing: border-box; /* Ensure padding is included in height calculation */
@@ -547,8 +576,6 @@ export default {
   padding: 0 10px;
   overflow-x: auto;
 }
-
-
 
 .preview-item {
   position: relative;
@@ -568,9 +595,10 @@ export default {
   bottom: 180px;
   left: 0;
   width: 100%;
-  padding: 10px;
+  padding: 15px 10px;
   overflow-x: auto;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1001;
 }
 
 .preview-strip {
@@ -581,12 +609,13 @@ export default {
 
 .preview-strip-item {
   position: relative;
-  flex: 0 0 60px;
-  height: 60px;
+  flex: 0 0 70px;
+  height: 70px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
   border: 2px solid rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
+  margin: 5px;
 }
 
 .preview-strip-item.latest {
